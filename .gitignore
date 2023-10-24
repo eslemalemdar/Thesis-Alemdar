@@ -1,0 +1,7 @@
+venv/
+input/*
+!input/.gitkeep
+output.csv
+.DS_Store
+bin/
+lib/python3.9/site-packages/
