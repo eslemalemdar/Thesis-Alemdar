@@ -22,24 +22,26 @@ for index, row in df.iterrows():
     # RE-MENTIONED LOGIC
     current_singular_label = row['singLabel']
     re_mentions = df[(df['file_name'] == current_file_name) & (df['singLabel'] == current_singular_label)]
-    number_of_rementions = len(re_mentions)
-    df.at[index, 're_mentions_count'] = number_of_rementions
-    is_re_mentioned = number_of_rementions > 1
+    re_mentions_count = len(re_mentions)
+    df.at[index, 're_mentions_count'] = re_mentions_count
+    is_re_mentioned = re_mentions_count > 1
     df.at[index, 'is_re_mentioned'] = is_re_mentioned
 
     if is_re_mentioned:
-        first_remention_sentence_level = re_mentions[re_mentions['sentenceLevel'] == re_mentions['sentenceLevel'].min()]
-        df.at[index, 'first_remention_sentence_level'] = first_remention_sentence_level.iloc[0]['sentenceLevel']
+        first_remention = re_mentions[re_mentions['sentenceLevel'] == re_mentions['sentenceLevel'].min()]
+        first_remention_sentence_level = first_remention.iloc[0]['sentenceLevel']
+        df.at[index, 'first_remention_sentence_level'] = first_remention_sentence_level
 
-        first_remention_word_index = first_remention_sentence_level[first_remention_sentence_level['word_index'] == first_remention_sentence_level['word_index'].min()]
-        df.at[index, 'first_remention_word_index'] = first_remention_word_index.iloc[0]['word_index']
+        first_remention_word_index = first_remention[first_remention['word_index'] == first_remention['word_index'].min()].iloc[0]['word_index']
+        df.at[index, 'first_remention_word_index'] = first_remention_word_index
 
     # JOINING WITH FIXDATA LOGIC
-    corresponding_fixdata = fix_df[current_file_name in fix_df['image_path'] & fix_df['objectLabel'] == row['label']]
-
-    # ?? There could be multiple matching fixdata rows, which one should we pick
-
-    
-print(df.head())
+    fix_df.loc[fix_df['image_path'].str.contains(str(current_file_name)) & fix_df['objectLabel'].str.contains(str(row['label'])), ['re_mentions_count','is_re_mentioned','first_remention_sentence_level','first_remention_word_index']] = [
+        re_mentions_count,
+        is_re_mentioned,
+        first_remention_sentence_level,
+        first_remention_word_index
+    ]
 
 df.to_csv('with_word_count.csv', index=False)
+fix_df.to_csv('fix_data_merged.csv', index=False)
